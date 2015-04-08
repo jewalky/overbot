@@ -96,7 +96,7 @@ class OverBot(irc.IrcConnection):
         # execute a NICK command first
         self.state = 'NICK'
         self.send_command('', 'NICK', [self.names[self.name]], '')
-        self.send_command('', 'USER', [self.names[self.name], '0', '*'], 'Alien Overbot')
+        self.send_command('', 'USER', [self.names[self.name], '0', '*'], 'Server LinkBot: https://github.com/jewalky/overbot')
         
     def join_channel(self, ch, password=''):
         print('Joining channel %s%s...' % (ch, ' (using password)' if password else ''))

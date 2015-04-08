@@ -57,7 +57,10 @@ class IrcConnection:
                         break
                     line = self.buffer[:n]
                     self.buffer = self.buffer[n+2:]
-                    self.recv_line(line.decode('utf-8'))
+                    try:
+                        self.recv_line(line.decode('utf-8'))
+                    except Exception as e:
+                        print('Caught exception %s while processing the line' % (repr(e)))
         except KeyboardInterrupt:
             pass
         self.disconnect()
