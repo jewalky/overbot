@@ -13,6 +13,8 @@ import socket
 #import zandronum
 import dexparse
 
+IgnoredStatic = ['LinkBot']
+
 class OverBot(irc.IrcConnection):
     def __init__(self):
         irc.IrcConnection.__init__(self, 'irc.zandronum.com')
@@ -29,6 +31,7 @@ class OverBot(irc.IrcConnection):
         time.sleep(10.0)
         self.ref.refresh()
         self.ref_last = time.time()
+        self.ignore_list = {}
         
     def dump_channels(self):
         try:
@@ -108,7 +111,31 @@ class OverBot(irc.IrcConnection):
         print('Leaving channel %s...' % (ch))
         self.send_command('', 'PART', [ch], '')
         
+    def check_flood(self, nickname):
+        nickname = nickname.lower()
+        if nickname not in self.ignore_list:
+            self.ignore_list[nickname] = [[time.time()], None] # list of last messages, "ignored until"
+            return False
+        else:
+            ar = self.ignore_list[nickname]
+            ar[0][0:0] = [time.time()]
+            ar[0] = ar[0][0:5]
+            if len(ar[0]) >= 5 and time.time()-ar[0][4] < 15.0:
+                ar[1] = time.time()+30.0
+                return True
+            return False
+            
+    def is_ignored(self, nickname):
+        nickname = nickname.lower()
+        if nickname in self.ignore_list and time.time() < self.ignore_list[nickname][1]:
+            return True
+        return False
+        
     def handle_chat(self, frm, to, msg, notice):
+        global IgnoredStatic
+        nickname = self.simple_origin(frm)
+        if nickname in IgnoredStatic:
+            return
         # handle normal chat
         if self.simple_origin(frm) == 'NickServ':
             if ' -> ' in msg and 'ACC' in msg: # acc reply
@@ -130,7 +157,10 @@ class OverBot(irc.IrcConnection):
                 tmsg = msg
                 #m = re.search(r'(zds\:\/\/([\d\.]+|[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,})\/(st|za))', tmsg)
                 m = re.search(r'(zds\:\/\/([\d\.]+|[a-zA-Z0-9][a-zA-Z0-9\-\.]+)\:\d+(?:\/(od|st|za))?)', tmsg)
-                if m is not None:
+                if m is not None and not self.is_ignored(nickname):
+                    if self.check_flood(nickname):
+                        self.send_command('', 'PRIVMSG', [to], '%s, you will be ignored for 30 seconds.' % (nickname))
+                        return
                     link_grp = m.group(1).split('/')
                     print(repr(link_grp))
                     link_addr = link_grp[2]
@@ -170,7 +200,11 @@ class OverBot(irc.IrcConnection):
                                 if pl_bots > 0:
                                     playstr.append('%d bot%s' % (pl_bots, 's' if pl_bots>1 else ''))
                                 playstr = ('; '+unicode(', '.join(playstr)) if len(playstr) > 0 else '')
-                                self.send_command('', 'PRIVMSG', [to], '%s (%s, Location: %s, Gametype: %s%s)' % (srv['name'], srv_addr, srv['country'], srv['gametype'], playstr))
+                                def escape(s):
+                                    #s = s.replace('://', u':/\u200B/')
+                                    #s = re.sub(r'(?i)www', u'ww\u200Bw', s)
+                                    return s
+                                self.send_command('', 'PRIVMSG', [to], u'\u200B%s (%s, Location: %s, Gametype: %s%s)' % (escape(srv['name']), srv_addr, srv['country'], srv['gametype'], playstr))
             except:
                 raise
         # handle commands
