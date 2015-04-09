@@ -231,8 +231,11 @@ class OverBot(irc.IrcConnection):
     def tick(self):
         self.commands = [cmd for cmd in self.commands if not self.execute_command(*cmd)]
         if time.time()-self.ref_last > 60:
-            self.ref.refresh()
-            self.ref_last = time.time()
+            try:
+                self.ref.refresh()
+                self.ref_last = time.time()
+            except:
+                pass
 
 cl = OverBot()
 cl.run()
