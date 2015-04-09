@@ -1,0 +1,5 @@
+ZRC (ZDaemon Relay Client) is a library / visual component that provides
+IRC client services and is designed to be embedded inside applications 
+requiring IRC functionality.
+
+It is made by Kilgore: kilgore@zdaemon.org 

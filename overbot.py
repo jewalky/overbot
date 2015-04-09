@@ -10,7 +10,8 @@ import json
 import re
 import socket
 
-import zandronum
+#import zandronum
+import dexparse
 
 class OverBot(irc.IrcConnection):
     def __init__(self):
@@ -24,7 +25,8 @@ class OverBot(irc.IrcConnection):
         self.origin = ''
         self.usercache = {} #nickname -> [username, update_date]
         self.commands = [] #nickname, username, date, argv
-        self.ref = zandronum.ZandronumRefresher()
+        self.ref = dexparse.DEXParser('dex')
+        time.sleep(10.0)
         self.ref.refresh()
         self.ref_last = time.time()
         
@@ -127,9 +129,21 @@ class OverBot(irc.IrcConnection):
                 found = False
                 tmsg = msg
                 #m = re.search(r'(zds\:\/\/([\d\.]+|[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,})\/(st|za))', tmsg)
-                m = re.search(r'(zds\:\/\/([\d\.]+|[a-zA-Z0-9][a-zA-Z0-9\-\.]+)\:\d+\/(st|za))', tmsg)
+                m = re.search(r'(zds\:\/\/([\d\.]+|[a-zA-Z0-9][a-zA-Z0-9\-\.]+)\:\d+(?:\/(od|st|za))?)', tmsg)
                 if m is not None:
-                    link_addr = m.group(1).split('/')[2]
+                    link_grp = m.group(1).split('/')
+                    print(repr(link_grp))
+                    link_addr = link_grp[2]
+                    try:
+                        link_proto = link_grp[3]
+                    except:
+                        link_proto = 'zd'
+                    if link_proto == 'st':
+                        link_proto = 'za'
+                    if not link_proto:
+                        link_proto = 'zd'
+                    print link_addr
+                    print link_proto
                     lex = link_addr.find(':')
                     link_addr_host = link_addr[:lex]
                     link_addr_port = link_addr[lex+1:]
@@ -139,22 +153,15 @@ class OverBot(irc.IrcConnection):
                         pass
                     link_addr = link_addr_host+':'+link_addr_port
                     servers = self.ref.servers
-                    if len(servers) == 0:
-                        servers = self.ref.old_servers
+                    #with open('servers.json', 'w') as f:
+                    #    f.write(json.dumps(servers, indent=4))
                     for srv in servers:
-                        srv_addr = '%s:%d' % (srv.addr[0], srv.addr[1])
-                        if srv_addr == link_addr:
-                            if not srv.na:
-                                pl_play = 0
-                                pl_spec = 0
+                        srv_addr = srv['ip']
+                        if srv_addr == link_addr and srv['port'] == link_proto:
+                            if 'name' in srv:
+                                pl_play = srv['playing']
+                                pl_spec = srv['clients']-pl_play
                                 pl_bots = 0
-                                for player in srv.players:
-                                    if player.spectator:
-                                        pl_spec += 1
-                                    elif player.bot:
-                                        pl_bots += 1
-                                    else:
-                                        pl_play += 1
                                 playstr = []
                                 if pl_play > 0:
                                     playstr.append('%d player%s' % (pl_play, 's' if pl_play>1 else ''))
@@ -163,7 +170,7 @@ class OverBot(irc.IrcConnection):
                                 if pl_bots > 0:
                                     playstr.append('%d bot%s' % (pl_bots, 's' if pl_bots>1 else ''))
                                 playstr = ('; '+unicode(', '.join(playstr)) if len(playstr) > 0 else '')
-                                self.send_command('', 'PRIVMSG', [to], '%s (%s, Gametype: %s%s)' % (srv.title, srv_addr, srv.game_mode_as_string(), playstr))
+                                self.send_command('', 'PRIVMSG', [to], '%s (%s, Location: %s, Gametype: %s%s)' % (srv['name'], srv_addr, srv['country'], srv['gametype'], playstr))
             except:
                 raise
         # handle commands

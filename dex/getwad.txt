@@ -1,0 +1,8 @@
+GetWAD is a library and a sample program to locate, download, unpack and 
+install WAD files automatically. Its primary purpose is to simplify the WAD 
+handling for Doom players. 
+
+It is made by Kilgore: kilgore@zdaemon.org 
+Additional information can be found on his homepage:
+http://hs.keystone.gr/
+

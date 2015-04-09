@@ -1,0 +1,4 @@
+IP2C is a library which allow to convert IP addresses to Country information:
+country names and flags.
+
+It is made by Kilgore: kilgore@zdaemon.org 

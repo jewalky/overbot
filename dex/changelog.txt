@@ -1,0 +1,18 @@
+ver. 1.00: first release
+
+ver. 1.03:
+         - improved wad selection algorithm when using the keyboard
+         - Single play:
+              * added option to save the current video mode
+              * fixed bug with saving/restoring OpenGL option
+              * fixed bug with random mapname selection
+         - added option to select short Application title
+         - added option to setup main toolbar appearance
+         - fixed problem with the input focus when switching to chat
+         - fixed bug launch game on a server with a replacement address
+         - fixed bug when updating IP2C
+         - check the server before check wads when the game starts
+         - changed dmflags Zandronum 2.0
+         - added support for Rcon_utility for Zandronum
+         - fixed localization errors
+         - fixed bug with iwad in server filters
