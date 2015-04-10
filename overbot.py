@@ -162,7 +162,7 @@ class OverBot(irc.IrcConnection):
                         self.send_command('', 'PRIVMSG', [to], '%s, you will be ignored for 30 seconds.' % (nickname))
                         return
                     link_grp = m.group(1).split('/')
-                    print(repr(link_grp))
+                    #print(repr(link_grp))
                     link_addr = link_grp[2]
                     try:
                         link_proto = link_grp[3]
@@ -172,8 +172,8 @@ class OverBot(irc.IrcConnection):
                         link_proto = 'za'
                     if not link_proto:
                         link_proto = 'zd'
-                    print link_addr
-                    print link_proto
+                    #print link_addr
+                    #print link_proto
                     lex = link_addr.find(':')
                     link_addr_host = link_addr[:lex]
                     link_addr_port = link_addr[lex+1:]
